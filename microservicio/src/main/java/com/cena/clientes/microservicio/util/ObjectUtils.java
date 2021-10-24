@@ -40,4 +40,10 @@ public class ObjectUtils {
 
         return empty;
     }
+
+    public static String nullToString(Object value) {
+        if (Objects.isNull(value)) return "";
+
+        return value.toString();
+    }
 }

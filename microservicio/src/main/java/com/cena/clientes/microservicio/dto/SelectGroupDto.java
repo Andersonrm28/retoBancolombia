@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SelectGroupDto {
     public String clientCode;
-    public int encrypt;
+    public boolean encrypt;
 }
