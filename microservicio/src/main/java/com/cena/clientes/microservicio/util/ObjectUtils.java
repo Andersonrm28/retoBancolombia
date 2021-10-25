@@ -29,18 +29,6 @@ public class ObjectUtils {
         return !isNullOrEmpty(value);
     }
 
-    public static boolean isEmpty(Object... objects) {
-        if(Objects.isNull(objects)) return true;
-
-        boolean empty = false;
-
-        for (Object value : objects) {
-            empty = empty || isNullOrEmpty(value);
-        }
-
-        return empty;
-    }
-
     public static String nullToString(Object value) {
         if (Objects.isNull(value)) return "";
 

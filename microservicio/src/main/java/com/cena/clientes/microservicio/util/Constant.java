@@ -16,4 +16,7 @@ public final class Constant {
     public static final String RESULT_CLIENT_CODE ="clientCode";
     public static final String RESULT_ENCRYPT ="encrypt";
 
+    // Url servicio para desencriptar codigos de cliente
+    public static final String URL_CODE_DECRYPT = "https://test.evalartapp.com/extapiquest/code_decrypt/";
+
 }

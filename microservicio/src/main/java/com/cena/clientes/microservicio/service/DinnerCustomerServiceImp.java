@@ -7,6 +7,7 @@ import com.cena.clientes.microservicio.util.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedCaseInsensitiveMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,7 +26,6 @@ public class DinnerCustomerServiceImp implements DinnerCustomerService {
     private String finalResult = "";
     private FiltersDto queryFilters = new FiltersDto();
     private boolean hasFilters = false;
-
 
     @Autowired
     public DinnerCustomerServiceImp(DinnerCustomerAdapterRepository dinnerCustomerAdapterRepository) {
@@ -96,7 +96,11 @@ public class DinnerCustomerServiceImp implements DinnerCustomerService {
         String result = Constant.CANCELED_GROUP;
         List<SelectGroupDto> selectGroup = transformSelectGroup(queryFilters);
         if (selectGroup.size() > 1){
-            result = selectGroup.stream().map(itemGroup -> String.valueOf(itemGroup.clientCode)).collect(Collectors.joining(","));
+            // validar si por lo menos 1 dato de la lista esta encriptado, esto con el fin de proceder
+            // a desencriptar la informacion
+            result = selectGroup.stream().anyMatch(itemGroup -> itemGroup.encrypt) ?
+                    transformSelectGroupWithService(selectGroup) :
+                    selectGroup.stream().map(itemGroup -> String.valueOf(itemGroup.clientCode)).collect(Collectors.joining(","));
         }
         hasFilters = false;
         return result;
@@ -118,6 +122,27 @@ public class DinnerCustomerServiceImp implements DinnerCustomerService {
         } catch (Exception e) {}
 
         return selectGroup;
+    }
+
+    // Metodo encargado de transformar la lista de grupos selectos de clientes en una
+    // cadena separada por coma
+    private String transformSelectGroupWithService(List<SelectGroupDto> selectGroup) {
+        List<SelectGroupDto> transformSelectGroup = new ArrayList<>();
+        for (SelectGroupDto itemGroup: selectGroup) {
+            String newClientCode = itemGroup.encrypt ? getFinalClientCode(itemGroup.clientCode) : itemGroup.clientCode;
+            transformSelectGroup.add(new SelectGroupDto(newClientCode, itemGroup.encrypt));
+        }
+
+        return transformSelectGroup.stream().map(itemGroup -> String.valueOf(itemGroup.clientCode)).collect(Collectors.joining(","));
+    }
+
+    // Metodo encargado de desencriptar el codigo de los clientes que estan encriptados
+    // LLamando un servicio get
+    private String getFinalClientCode(String clientCodeEncrypted) {
+        String urlDecryptService = Constant.URL_CODE_DECRYPT + clientCodeEncrypted;
+        RestTemplate restTemplate = new RestTemplate();
+        String finalClientCode = restTemplate.getForObject(urlDecryptService, String.class);
+        return finalClientCode.replace('"', '.').replace(".", "");
     }
 
 }
